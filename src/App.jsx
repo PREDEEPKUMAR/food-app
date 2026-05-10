@@ -4,6 +4,8 @@ import Hero from "./components/Hero";
 import FoodCard from "./components/FoodCard";
 import OutletCard from "./components/OutletCard";
 import Cart from "./components/Cart";
+import PaymentPage from "./components/PaymentPage";
+import PaymentSuccess from "./components/PaymentSuccess";
 import { outlets, vegItems, nonVegItems } from "./data/foodData";
 import "./App.css";
 
@@ -12,7 +14,8 @@ function App() {
   const [selectedOutlet, setSelectedOutlet] = useState(null);
   const [cart, setCart] = useState([]);
   const [showCart, setShowCart] = useState(false);
-  const [orderPlaced, setOrderPlaced] = useState(false);
+  const [currentPage, setCurrentPage] = useState("home");
+  const [orderDetails, setOrderDetails] = useState(null);
 
   const handleAddToCart = useCallback((item, delta) => {
     setCart((prev) => {
@@ -45,10 +48,24 @@ function App() {
   }, []);
 
   const handleCheckout = () => {
-    setOrderPlaced(true);
-    setCart([]);
     setShowCart(false);
-    setTimeout(() => setOrderPlaced(false), 3000);
+    setCurrentPage("payment");
+  };
+
+  const handlePaymentSuccess = (details) => {
+    setOrderDetails(details);
+    setCart([]);
+    setCurrentPage("success");
+  };
+
+  const handleBackToMenu = () => {
+    setOrderDetails(null);
+    setCurrentPage("home");
+  };
+
+  const handleBackToCart = () => {
+    setCurrentPage("home");
+    setShowCart(true);
   };
 
   const handleOutletSelect = (outletId) => {
@@ -75,6 +92,40 @@ function App() {
   const filteredItems = getFilteredItems();
   const selectedOutletData = outlets.find((o) => o.id === selectedOutlet);
 
+  if (currentPage === "payment") {
+    return (
+      <div className="app">
+        <Header
+          activeTab={activeTab}
+          onTabChange={(tab) => {
+            setActiveTab(tab);
+            if (tab !== "outlets") setSelectedOutlet(null);
+            setCurrentPage("home");
+          }}
+          cartCount={cartCount}
+          onCartClick={() => {
+            setCurrentPage("home");
+            setShowCart(true);
+          }}
+        />
+        <PaymentPage
+          cartItems={cart}
+          onPaymentSuccess={handlePaymentSuccess}
+          onBackToCart={handleBackToCart}
+        />
+      </div>
+    );
+  }
+
+  if (currentPage === "success" && orderDetails) {
+    return (
+      <PaymentSuccess
+        orderDetails={orderDetails}
+        onBackToMenu={handleBackToMenu}
+      />
+    );
+  }
+
   return (
     <div className="app">
       <Header
@@ -86,12 +137,6 @@ function App() {
         cartCount={cartCount}
         onCartClick={() => setShowCart(true)}
       />
-
-      {orderPlaced && (
-        <div className="order-success">
-          🎉 Order placed successfully! Your food is on its way!
-        </div>
-      )}
 
       {activeTab === "outlets" ? (
         <section className="section">
