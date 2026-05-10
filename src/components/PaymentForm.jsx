@@ -30,7 +30,7 @@ function PaymentForm({ method, errors, onSubmit, processing }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (method === "card") {
-      onSubmit({ cardNumber, expiry, cvv, cardHolder });
+      onSubmit({ cardNumber, expiry: formatExpiry(expiry), cvv, cardHolder });
     } else if (method === "upi") {
       onSubmit({ upiId });
     } else {
